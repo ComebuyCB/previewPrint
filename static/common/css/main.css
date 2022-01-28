@@ -1,0 +1,74 @@
+/*** ###### Default Css ###### ***/
+  /* :root {
+  }
+
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif; }
+
+  #wrap { display: flex; flex-direction: column; min-height: 100vh; margin-left: auto; margin-right: auto; }
+  main { flex-grow: 1; } */
+
+
+/*** ###### Plugins ###### ***/
+  /***=== Modify Plugins 修改套件樣式 ===***/
+    /*=== 例如: Bootstrap、Swiper... ===*/
+
+  /***=== Self-made Plugins 自製套件樣式，JS必定參與 ===***/
+    /*=== 例如: js-drag-img、js-follow-btn... ===*/
+
+
+
+/*** ###### Public Css ###### ***/
+  /*** === Simple Css 單一樣式，通常套用一行結束 === ***/
+    /*=== 例如: box model、color、font... ===*/
+      .pos-r { position: relative; }
+      .pos-a { position: absolute; }
+      .pos-f { position: fixed; }
+
+      .loc-1 { left:0; bottom:0; }
+      .loc-2 { left:50%; bottom:0; transform:translate(-50%,0%); }
+      .loc-3 { right:0; bottom:0; }
+      .loc-4 { left:0; top:50%; transform:translate(0%,-50%); }
+      .loc-5 { left:50%; top:50%; transform:translate(-50%,-50%); }
+      .loc-6 { right:0; top:50%; transform:translate(0%,-50%); }
+      .loc-7 { left:0; top:0;}
+      .loc-8 { left:50%; top:0; transform:translate(-50%,0%); }
+      .loc-9 { right:0; top:0;}
+      .loc-t { left:0; right:0; top:0; }
+      .loc-b { left:0; right:0; bottom:0; }
+      .loc-l { left:0; top:0; bottom:0; }
+      .loc-r { right:0; top:0; bottom:0; }
+
+      .loc-full { left:0; right:0; top:0; bottom:0; }
+
+      .img-full { background-repeat: no-repeat; background-position: center center; background-size: cover; }
+      .img-contain { background-size: contain !important; }
+
+  /*** === Components 單一元件，通常少少幾行結束 === ***/
+    /*=== 例如: btn、checkbox、paper... ===*/
+
+  /*** === Templates 多物件組合，通常用到兩頁以上，都會提取至此 === ***/
+    /*=== 例如: mainTable、dateBox、authForm... ===*/
+
+
+
+/*** ###### Pages ###### ***/
+  /*** === Include Page === ***/
+    /*=== 例如: header、#modal、footer... ===*/
+
+  /*** === Current Page === ***/
+    /*=== 例如: #index、#login、#about... ===*/
+      #dragContainer { position: relative; width: 100%; height: 100%; border: 1px solid #999; overflow: hidden; }
+      #dragBg { position: absolute; right: 0; top: 0; width: 100%; z-index: 1; cursor: all-scroll; }
+
+      .imgBox { position: relative; display: inline-block; width: 150px; height: 150px; z-index: 2; border: solid 2px #eee; }
+
+      .bg-grid-line { 
+        background-size: 100px 100px;
+        background-image:
+        linear-gradient(to right, white 1px, black 1px, transparent 1px),
+        linear-gradient(to bottom, white 1px, black 1px, transparent 1px);
+      }
+      #botMenu-body .tab-pane { padding: 1rem; }
+      .js-draggable, .js-resizable { touch-action: none; position: absolute; }
+      #Bg { display: block; touch-action: none; }
