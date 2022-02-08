@@ -33,34 +33,33 @@
 
     <main id="main">
       <div id="dragContainer" class="pos-f loc-full">
-        <div id="BG-drag" class="js-draggable" :data-id="bg.view.id" data-role="bg" 
-          :data-x="bg.view.x" :data-y="bg.view.y"
-          :style="`transform: translate(${bg.view.x}px,${bg.view.y}px);`">
-
-          <img id="BG-img" :src="bg.view.src" @load="init_BG()"
+        <div id="BG-drag" class="js-draggable-bg" :data-id="bg['view'].id"
+          :data-x="bg['view'].x" :data-y="bg['view'].y"
+          :style="`transform: translate(${bg['view'].x}px,${bg['view'].y}px);`">
+          <img id="BG-img" :src="bg['view'].src" @load="init_BG()"
             :style="`
-              width: ${bg.view.fit_w * bg.scaleRange.val}px; 
-              height: ${bg.view.fit_h * bg.scaleRange.val}px;
+              width: ${ bg['view'].cm_w * bgScale }px; 
+              height: ${ bg['view'].cm_h * bgScale }px;
           `">
 
           <div id="paint-ruler" class="bg-grid-line pos-a loc-full" :style="`background-size: ${100 * paintScale}px ${100 * paintScale}px;`"></div>
 
           <div id="paint-dragBox" class="pos-a loc-full">
-            <img v-for="(item,idx) in paint.add" class="js-draggable" :data-id="item.id" data-role="paint"
+            <img v-for="(item, idx) in paint.add" class="js-draggable-paint" :data-id="item.id"
               :data-x="item.x" :data-y="item.y" :src="item.src"
               :style="`
-                width: ${item.cm_w * paintScale}px; 
-                height: ${item.cm_h * paintScale}px; 
-                transform: translate(${item.x}px, ${item.y}px)
+                width: ${ item.cm_w * paintScale }px; 
+                height: ${ item.cm_h * paintScale }px; 
+                transform: translate(${item.x}px, ${item.y}px); 
             `">
           </div>
         </div>
       </div>
   
       <div id="botMenu" class="pos-f loc-2 w-100">
-        <div class="pos-a loc-t" style="top: -120px;">
+        <div id="pRuler-cont" class="pos-a loc-t" style="top: -120px;">
           <div class="d-flex flex-column container-xl py-2" style="background-color: rgba(255,255,255,0.5)">
-            <div class="text-center fw-bold">比例尺 (一格為1公尺)</div>
+            <div class="text-center fw-bold">比例尺 (一格為1公尺) {{ paint.scaleRange.val }}</div>
             <div class="d-flex">
               <i id="ruler-scaleDown" class="fa fa-minus px-1"></i>
               <input id="ruler-scaleRange" type="range" :min="paint.scaleRange.min" :max="paint.scaleRange.max" step="0.001" class="w-100" v-model.number="paint.scaleRange.val" @input="scale_after_center_paint()">
@@ -68,9 +67,9 @@
             </div>
           </div>
         </div>
-        <div class="pos-a loc-t" style="top: -60px;">
+        <div id="bPuler-cont" class="pos-a loc-t" style="top: -60px;">
           <div class="d-flex flex-column container-xl py-2" style="background-color: rgba(255,255,255,0.5)">
-            <div class="text-center fw-bold">整體大小</div>
+            <div class="text-center fw-bold">縮放 {{ bg.scaleRange.val }}</div>
             <div class="d-flex">
               <i id="bg-scaleDown" class="fa fa-minus px-1"></i>
               <input id="bg-scaleRange" type="range" :min="bg.scaleRange.min" :max="bg.scaleRange.max" step="0.01" class="w-100" v-model.number="bg.scaleRange.val" @input="scale_after_center_BG()">
@@ -78,6 +77,9 @@
             </div>
           </div>
         </div>
+        
+        <button class="btn btn-primary" onclick="$('#botMenu-content, #bPuler-cont').toggle()"><i class="fa fa-bars"></i></button>
+        <button class="btn btn-success" onclick="$('#paint-ruler, #pRuler-cont').toggle();"><i class="fa fa-ruler"></i></button>
 
         <div id="botMenu-content" class="bg-white" style="min-height: 230px;">
           <nav id="botMenu-header">
@@ -87,7 +89,6 @@
             </div>
           </nav>
           <div id="botMenu-body" class="tab-content">
-
             <div id="menu-paint" class="tab-pane fade show active" role="tabpanel">
               <div class="d-flex">
                 <div v-for="(item,idx) of paint.list" v-show="item.show" class="imgBox img-full img-contain" :style="`background-image: url(${item.src})`">
@@ -107,6 +108,15 @@
     </main>
 
     <script>
+      function dragMoveListener(event) {
+        let $TG = $(event.target)
+        let x = ( (+$TG.attr('data-x') ) || 0) + event.dx
+        let y = ( (+$TG.attr('data-y') ) || 0) + event.dy
+        $TG.attr('data-x', x)
+        $TG.attr('data-y', y)
+        $TG.css('transform', 'translate('+x+'px, '+y+'px)')
+      }
+
       var vm = new Vue({
         el: '#main',
         mounted() {
@@ -116,58 +126,71 @@
             V.init_BG()
           })
           
-          interact('.js-draggable').draggable({
+          // BG
+          interact('.js-draggable-bg').draggable({
             listeners: {
               start(event) {
               },
               move(event) {
-                var $target = $(event.target)
-                let x = ( (+$target.attr('data-x') ) || 0) + event.dx
-                let y = ( (+$target.attr('data-y') ) || 0) + event.dy
-
-                $target.attr('data-x', x)
-                $target.attr('data-y', y)
-                $target.css('transform', 'translate('+x+'px, '+y+'px)')
+                dragMoveListener( event )
               },
               end(event) {
                 var $target = $(event.target)
                 var id = $target.attr('data-id')
-                var role = $target.attr('data-role')
 
-                if ( role === 'bg' ){
-                  let BGv = vm.$data.bg.view
-                  if ( BGv.id == id ){
-                    BGv.x = +$target.attr('data-x')
-                    BGv.y = +$target.attr('data-y')
-                  }
-                }
-                if ( role === 'paint' ){
-                  vm.$data.paint.add.forEach( (ele, idx, arr)=>{
-                    if ( ele.id == id ){
-                      arr[idx].x = +$target.attr('data-x')
-                      arr[idx].y = +$target.attr('data-y')
-                    }
-                  })
+                let BGv = V.bg.view
+                if ( BGv.id == id ){
+                  BGv.x = +$target.attr('data-x')
+                  BGv.y = +$target.attr('data-y')
                 }
               }
             },
-            inertia: true,
+            // inertia: true,
             modifiers: [
               interact.modifiers.restrictRect({
                 restriction: $('#dragContainer')[0],
+                endOnly: true,
               })
             ],
           })
 
+          // Paint
+          interact('.js-draggable-paint').draggable({
+            listeners: {
+              start(event) {
+              },
+              move(event) {
+                dragMoveListener( event )
+              },
+              end(event) {
+                var $target = $(event.target)
+                var id = $target.attr('data-id')
+
+                V.paint.add.forEach( (ele, idx, arr)=>{
+                  if ( ele.id == id ){
+                    arr[idx].x = +$target.attr('data-x')
+                    arr[idx].y = +$target.attr('data-y')
+                  }
+                })
+              }
+            },
+            // inertia: true,
+            modifiers: [
+              interact.modifiers.restrictRect({
+                restriction: $('#BG-drag')[0],
+                endOnly: true,
+              })
+            ],
+          })
         },
         data: {
           bg: {
             mode: 'cover',
             scaleRange: {
-              min: 0.2,
+              min: 0.5,
               max: 5,
               val: 1,
-              oldVal: 1,
+              oldVal: null,
             },
             view: { id: 1005, cm_w: 100, cm_h: 0, nat_w: 0, nat_h: 0, ratio: 0, fit_w: 0, fit_h: 0, fit_s: 0, src: 'https://storage.googleapis.com/opinion-cms-cwg-tw/article/202103/article-6052f9b074f33.jpg', x: 0, y: 0, },
             list: [
@@ -179,20 +202,24 @@
               min: 0.05,
               max: 1,
               val: 0.10,
-              oldVal: 1,
+              oldVal: null,
             },
             add: [],
             list: [
               { id: 1001, cm_w: 60, cm_h: 40, src: 'https://picsum.photos/600/400', x: 0, y: 0, show: true },
-              { id: 1002, cm_w: 90, cm_h: 120, src: 'https://picsum.photos/300/400', x: 0, y: 0, show: true },
+              { id: 1002, cm_w: 60, cm_h: 80, src: 'https://picsum.photos/300/400', x: 0, y: 0, show: true },
               { id: 1003, cm_w: 100, cm_h: 100, src: 'https://picsum.photos/500/500', x: 0, y: 0, show: true },
             ],
           }
         },
         computed: {
+          bgScale(){
+            let V = this
+            return V.bg.view.fit_s * V.bg.scaleRange.val
+          },
           paintScale(){
             let V = this
-            return V.paint.scaleRange.val * V.bg.view.fit_s * V.bg.scaleRange.val
+            return V.bg.view.fit_s * V.bg.scaleRange.val * V.paint.scaleRange.val
           },
         },
         methods: {
@@ -230,7 +257,8 @@
                 BG.nat_w = Img.naturalWidth
                 BG.nat_h = Img.naturalHeight
                 BG.ratio = BG.nat_w / BG.nat_h // 圖片長寬比
-                BG.cm_h = 100 * BG.ratio // 寬100公分 / 高x公分
+                BG.cm_w = 100 // 寬固定100公分為基礎
+                BG.cm_h = BG.cm_w / BG.ratio // 寬100公分 / 高x公分
 
             let w_ratio = window.innerWidth / window.innerHeight // 螢幕長寬比
             let modeBool = V.bg.mode === 'cover' ? BG.ratio > w_ratio : BG.ratio < w_ratio
@@ -246,45 +274,42 @@
               BG.x = 0
               BG.y = -( BG.fit_h - window.innerHeight ) / 2
             }
-            BG.fit_s = BG.fit_w / 100 // 以100公分為基礎
+            BG.fit_s = BG.fit_w / BG.cm_w
             // BG.fit_s = BG.fit_w / Img.naturalWidth
           },
 
           scale_after_center_BG(){
             let V = this
-            let { view:BGv, scaleRange:BGs } = V.bg
-            let oldScale = +BGs.oldVal
-            let newScale = +BGs.val
+            let { view:BG_V, scaleRange:BG_S } = V.bg
+            let oldValue = +BG_S.oldVal || +BG_S.val
+            let newValue = +BG_S.val
 
-            var $target = $(event.target)
-
-            let x = ( BGv.fit_w*newScale - BGv.fit_w*oldScale ) / 2
-            let y = ( BGv.fit_h*newScale - BGv.fit_h*oldScale ) / 2
-            BGv.x -= x
-            BGv.y -= y
+            BG_V.x -= BG_V.fit_w * ( newValue - oldValue ) / 2
+            BG_V.y -= BG_V.fit_h * ( newValue - oldValue ) / 2
             
-            let amp = newScale / oldScale
+            let amp = newValue / oldValue
             V.paint.add.forEach( item => {
               item.x = item.x * amp
               item.y = item.y * amp
             }) 
             
-            BGs.oldVal = newScale
+            BG_S.oldVal = newValue
           },
 
           scale_after_center_paint(){
             let V = this
-            let oldScale = +V.paint.scaleRange.oldVal
-            let newScale = +V.paint.scaleRange.val
-            let paintScale = V.paint.scaleRange.val * V.bg.view.fit_s * (newScale - oldScale)
+            let { scaleRange:PTScale } = V.paint
+            let oldValue = +PTScale.oldVal || +PTScale.val
+            let newValue = +PTScale.val
 
-            // 待調整
+            let oS = V.bgScale * oldValue
+            let nS = V.bgScale * newValue
             V.paint.add.forEach( item => {
-              item.x -= item.cm_w * paintScale / 2
-              item.y -= item.cm_h * paintScale / 2
+              item.x -= item.cm_w * (nS - oS) / 2
+              item.y -= item.cm_h * (nS - oS) / 2
             })
 
-            V.paint.scaleRange.oldVal = newScale
+            PTScale.oldVal = newValue
           },
         }
       })
@@ -295,98 +320,6 @@
         var {a,b,c,d,e,f,m11,m12,m13,m14,m21,m22,m23,m24,m31,m32,m33,m34,m41,m42,m43,m44} = matrix
         return { x: m41, y: m42 }
       }
-
-      function ImgDraggable(){
-        
-      }
-      
-      function ImgGesturable(){
-        interact('#BG-img')
-          .gesturable({
-            listeners: {
-              start (event) {
-              },
-              move (event) {
-                var newScale = BG.evt_s * event.scale
-
-                $(event.target).css({ 
-                  width: BG.fit_w * newScale, 
-                  height: BG.fit_h * newScale 
-                })
-
-                dragMoveListener(event)
-              },
-              end (event) {
-                BG.evt_s = BG.evt_s * event.scale
-              }
-            },
-            // inertia: true
-          })
-          .draggable({
-            listeners: { move: dragMoveListener },
-            // inertia: true
-          })
-      }
-
-      function ImgResizable(){
-        interact('.js-resizable')
-          .resizable({
-            // resize from all edges and corners
-            edges: { left: true, right: true, bottom: true, top: true },
-
-            listeners: {
-              move (event) {
-                var target = event.target
-                var x = (parseFloat(target.getAttribute('data-x')) || 0)
-                var y = (parseFloat(target.getAttribute('data-y')) || 0)
-
-                // update the element's style
-                target.style.width = event.rect.width + 'px'
-                target.style.height = event.rect.height + 'px'
-
-                // translate when resizing from top or left edges
-                x += event.deltaRect.left
-                y += event.deltaRect.top
-
-                target.style.transform = 'translate(' + x + 'px,' + y + 'px)'
-                
-                target.setAttribute('data-x', x)
-                target.setAttribute('data-y', y)
-              }
-            },
-            modifiers: [
-              interact.modifiers.aspectRatio({
-                ratio: 16/9,
-                // modifiers: [
-                //   interact.modifiers.restrictEdges({ outer: 'parent' })
-                // ]
-              }),
-
-              // keep the edges inside the parent
-              // interact.modifiers.restrictEdges({
-              //   outer: 'parent'
-              // }),
-
-              // minimum size
-              interact.modifiers.restrictSize({
-                min: { width: 100, height: 100 }
-              })
-            ],
-
-            inertia: true
-          })
-          .draggable({
-            listeners: { move: dragMoveListener },
-            inertia: true,
-            // modifiers: [
-            //   interact.modifiers.restrictRect({
-            //     restriction: 'parent',
-            //     endOnly: true
-            //   })
-            // ]
-          })
-      }
-
     </script>
   </div>
 </body>

@@ -65,4 +65,4 @@
         pointer-events: none;
       }
       #botMenu-body .tab-pane { padding: 1rem; }
-      .js-draggable, .js-resizable { touch-action: none; position: absolute; }
+      .js-draggable-bg, .js-draggable-paint { touch-action: none; position: absolute; }
