@@ -1,12 +1,12 @@
 /*** ###### Default Css ###### ***/
-  /* :root {
+  :root {
   }
 
   html { scroll-behavior: smooth; }
   body { font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif; }
 
-  #wrap { display: flex; flex-direction: column; min-height: 100vh; margin-left: auto; margin-right: auto; }
-  main { flex-grow: 1; } */
+  #wrap { display: flex; flex-direction: column; min-height: var(--100vh, 100vh); margin-left: auto; margin-right: auto; }
+  main { flex-grow: 1; }
 
 
 /*** ###### Plugins ###### ***/
@@ -21,10 +21,6 @@
 /*** ###### Public Css ###### ***/
   /*** === Simple Css 單一樣式，通常套用一行結束 === ***/
     /*=== 例如: box model、color、font... ===*/
-      .pos-r { position: relative; }
-      .pos-a { position: absolute; }
-      .pos-f { position: fixed; }
-
       .loc-1 { left:0; bottom:0; }
       .loc-2 { left:50%; bottom:0; transform:translate(-50%,0%); }
       .loc-3 { right:0; bottom:0; }
@@ -58,9 +54,7 @@
 
   /*** === Current Page === ***/
     /*=== 例如: #index、#login、#about... ===*/
-      #dragContainer { position: relative; width: 100%; height: 100%; border: 1px solid #999; overflow: hidden; }
-      #dragBg { position: absolute; right: 0; top: 0; width: 100%; z-index: 1; cursor: all-scroll; }
-
+      #dragContainer { border: 1px solid #999; overflow: hidden; user-select: none; }
       .imgBox { position: relative; display: inline-block; width: 150px; height: 150px; z-index: 2; border: solid 2px #eee; }
 
       .bg-grid-line { 
@@ -68,7 +62,7 @@
         background-image:
         linear-gradient(to right, white 1px, black 1px, transparent 1px),
         linear-gradient(to bottom, white 1px, black 1px, transparent 1px);
+        pointer-events: none;
       }
       #botMenu-body .tab-pane { padding: 1rem; }
       .js-draggable, .js-resizable { touch-action: none; position: absolute; }
-      #Bg { display: block; touch-action: none; }

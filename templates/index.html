@@ -12,243 +12,292 @@
   <script src="/static/core/jquery-3.5.1/jquery-3.5.1.min.js"></script>
   <link href="/static/core/bootstrap-5.1.2/css/bootstrap.min.css" rel="stylesheet">
   <script src="/static/core/bootstrap-5.1.2/js/bootstrap.bundle.min.js"></script>
-
-
+  
   <!-- plugins -->
-  <!-- <link href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script> -->
+  <script src="/static/plugins/vue-2.6.12/vue.js"></script>
   <link href="/static/plugins/fontawesome-free-5.15.1-web/css/all.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/interact.js/1.9.22/interact.min.js"></script>
+  <!-- <link href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css" rel="stylesheet">
+  <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script> -->
 
   <!-- main -->
+  <link href="/static/common/css/emmet.css" rel="stylesheet">
   <link href="/static/common/css/main.css" rel="stylesheet">
   <script src="/static/common/js/main.js"></script>
 </head>
 <body>
-  <div id="wrap" style="overflow: hidden;">
+  <div id="wrap">
     <header>
         <script>$.get('include/header.html', (res)=>{ $('header')[0].outerHTML=res } )</script>
     </header>
 
-    <div id="dragContainer">
-      <div id="BG-drag" class="js-draggable" data-x="0" data-y="0" style="transform: translate(0,0)">
-        <img id="BG-img" src="https://picsum.photos/600/800" onload="getData_BG()"
-          data-nat-w="0" data-nat-h="0" data-nat-r="0" data-fit-w="0" data-fit-y="0" data-fit-s="0" data-evt-s="1">
-        <div id="print-drag-container" class="pos-a loc-full">
+    <main id="main">
+      <div id="dragContainer" class="pos-f loc-full">
+        <div id="BG-drag" class="js-draggable" :data-id="bg.view.id" data-role="bg" 
+          :data-x="bg.view.x" :data-y="bg.view.y"
+          :style="`transform: translate(${bg.view.x}px,${bg.view.y}px);`">
 
-        </div>
-      </div>
+          <img id="BG-img" :src="bg.view.src" @load="init_BG()"
+            :style="`
+              width: ${bg.view.fit_w * bg.scaleRange.val}px; 
+              height: ${bg.view.fit_h * bg.scaleRange.val}px;
+          `">
 
-      <div class="pos-f loc-full bg-grid-line" style="background-size: 100px 100px; pointer-events: none;"></div>
+          <div id="paint-ruler" class="bg-grid-line pos-a loc-full" :style="`background-size: ${100 * paintScale}px ${100 * paintScale}px;`"></div>
 
-    </div>
-
-    <div id="botMenu" class="pos-f loc-2 w-100">
-      <div id="rular-container" class="pos-a loc-t" style="top: -60px;">
-        <div class="d-flex flex-column container-xl py-2" style="background-color: rgba(255,255,255,0.5)">
-          <div class="text-center fw-bold">比例尺</div>
-          <div class="d-flex">
-            <i id="ruler-scaleDown" class="fa fa-minus px-1"></i>
-            <input id="ruler-scaleRange" type="range" min="0.2" max="5" step="0.01" value="1" class="w-100">
-            <i id="ruler-scaleUp" class="fa fa-plus px-1"></i>
+          <div id="paint-dragBox" class="pos-a loc-full">
+            <img v-for="(item,idx) in paint.add" class="js-draggable" :data-id="item.id" data-role="paint"
+              :data-x="item.x" :data-y="item.y" :src="item.src"
+              :style="`
+                width: ${item.cm_w * paintScale}px; 
+                height: ${item.cm_h * paintScale}px; 
+                transform: translate(${item.x}px, ${item.y}px)
+            `">
           </div>
         </div>
       </div>
-
-      <div class="text-end">
-        <i class="btn btn-primary btn-lg fa fa-bars" onclick="$('#botMenu-content').toggle()"></i>
-      </div>
-
-      <div id="botMenu-content" class="bg-white" style="min-height: 230px;">
-        <nav id="botMenu-header">
-          <div class="nav nav-tabs" role="tablist">
-            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#menu-print" type="button" role="tab">畫作</button>
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#menu-bg" type="button" role="tab">背景</button>
-          </div>
-        </nav>
-        <div id="botMenu-body" class="tab-content">
-          <div id="menu-print" class="tab-pane fade show active" role="tabpanel">
+  
+      <div id="botMenu" class="pos-f loc-2 w-100">
+        <div class="pos-a loc-t" style="top: -120px;">
+          <div class="d-flex flex-column container-xl py-2" style="background-color: rgba(255,255,255,0.5)">
+            <div class="text-center fw-bold">比例尺 (一格為1公尺)</div>
             <div class="d-flex">
-              <div class="imgBox img-full img-contain" style="background-image: url(https://picsum.photos/400/300);" onload="">
-                <button class="js-addBtn btn btn-primary fas fa-plus pos-a loc-9"></button>
-              </div>
-              <div class="imgBox img-full img-contain" style="background-image: url(https://picsum.photos/300/400);" onload="">
-                <button class="js-addBtn btn btn-primary fas fa-plus pos-a loc-9"></button>
-              </div>
-              <div class="imgBox img-full img-contain" style="background-image: url(https://picsum.photos/300/300);" onload="">
-                <button class="js-addBtn btn btn-primary fas fa-plus pos-a loc-9"></button>
-              </div>
+              <i id="ruler-scaleDown" class="fa fa-minus px-1"></i>
+              <input id="ruler-scaleRange" type="range" :min="paint.scaleRange.min" :max="paint.scaleRange.max" step="0.001" class="w-100" v-model.number="paint.scaleRange.val" @input="scale_after_center_paint()">
+              <i id="ruler-scaleUp" class="fa fa-plus px-1"></i>
             </div>
           </div>
-          <div id="menu-bg" class="tab-pane fade" role="tabpanel">
-              <div class="mb-2">選擇背景: <input id="file" type="file" accept="image/*"></div>
-              <div class="d-flex">
-                <i id="bg-scaleDown" class="fa fa-minus px-1"></i>
-                <input id="bg-scaleRange" type="range" min="0.2" max="5" step="0.01" value="1" class="w-100">
-                <i id="bg-scaleUp" class="fa fa-plus px-1"></i>
-              </div>
-              <button id="rular-btn" class="btn btn-primary">設定實際比例</button>
+        </div>
+        <div class="pos-a loc-t" style="top: -60px;">
+          <div class="d-flex flex-column container-xl py-2" style="background-color: rgba(255,255,255,0.5)">
+            <div class="text-center fw-bold">整體大小</div>
+            <div class="d-flex">
+              <i id="bg-scaleDown" class="fa fa-minus px-1"></i>
+              <input id="bg-scaleRange" type="range" :min="bg.scaleRange.min" :max="bg.scaleRange.max" step="0.01" class="w-100" v-model.number="bg.scaleRange.val" @input="scale_after_center_BG()">
+              <i id="bg-scaleUp" class="fa fa-plus px-1"></i>
             </div>
+          </div>
+        </div>
+
+        <div id="botMenu-content" class="bg-white" style="min-height: 230px;">
+          <nav id="botMenu-header">
+            <div class="nav nav-tabs" role="tablist">
+              <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#menu-paint" type="button" role="tab">畫作</button>
+              <button class="nav-link" data-bs-toggle="tab" data-bs-target="#menu-bg" type="button" role="tab">背景</button>
+            </div>
+          </nav>
+          <div id="botMenu-body" class="tab-content">
+
+            <div id="menu-paint" class="tab-pane fade show active" role="tabpanel">
+              <div class="d-flex">
+                <div v-for="(item,idx) of paint.list" v-show="item.show" class="imgBox img-full img-contain" :style="`background-image: url(${item.src})`">
+                  <button class="btn btn-primary fas fa-plus pos-a loc-9 js-addBtn" @click="append_Paint( paint.list, idx )"></button>
+                </div>
+              </div>
+            </div>
+
+            <div id="menu-bg" class="tab-pane fade" role="tabpanel">
+              <div class="mb-2">選擇背景: <input id="file" type="file" accept="image/*" @change="upload_BG"></div>
+              <label> <input type="radio" v-model="bg.mode" value="contain" @change="init_BG()"> 全螢幕 contain </label>
+              <label> <input type="radio" v-model="bg.mode" value="cover" @change="init_BG()"> 填滿 cover </label>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </main>
 
     <script>
-      $(function(){
-        setFullScreenSize('#wrap')
-        $(window).on('resize',()=>{
-          setFullScreenSize('#wrap')
-          getData_BG()
-        })
-      })
+      var vm = new Vue({
+        el: '#main',
+        mounted() {
+          let V = this
+          V.init_BG()
+          $(window).on('resize',()=>{
+            V.init_BG()
+          })
+          
+          interact('.js-draggable').draggable({
+            listeners: {
+              start(event) {
+              },
+              move(event) {
+                var $target = $(event.target)
+                let x = ( (+$target.attr('data-x') ) || 0) + event.dx
+                let y = ( (+$target.attr('data-y') ) || 0) + event.dy
 
-      // listeners
-      $('#menu-print').on('click','.js-addBtn', function(){
-        let src = $(this).closest('.imgBox').css('background-image')
-        src = src.replace( /url\("(.+)"\)/g,'$1')
-        append_Print( src )
-      })
-      $('#bg-scaleRange').on('input',()=>{
-        scale_BG()
-      })
-      $('#bg-scaleUp').on('click',()=>{
-        $('#bg-scaleRange').val( +$('#bg-scaleRange').val()+0.1 )
-        scale_BG()
-      })
-      $('#bg-scaleDown').on('click',()=>{
-        $('#bg-scaleRange').val( +$('#bg-scaleRange').val()-0.1 )
-        scale_BG()
-      })
-      $('#file').on('change',function(){
-        upload_BG(this)
-      })
+                $target.attr('data-x', x)
+                $target.attr('data-y', y)
+                $target.css('transform', 'translate('+x+'px, '+y+'px)')
+              },
+              end(event) {
+                var $target = $(event.target)
+                var id = $target.attr('data-id')
+                var role = $target.attr('data-role')
 
-      function getData_Print(){
-        
-      }
+                if ( role === 'bg' ){
+                  let BGv = vm.$data.bg.view
+                  if ( BGv.id == id ){
+                    BGv.x = +$target.attr('data-x')
+                    BGv.y = +$target.attr('data-y')
+                  }
+                }
+                if ( role === 'paint' ){
+                  vm.$data.paint.add.forEach( (ele, idx, arr)=>{
+                    if ( ele.id == id ){
+                      arr[idx].x = +$target.attr('data-x')
+                      arr[idx].y = +$target.attr('data-y')
+                    }
+                  })
+                }
+              }
+            },
+            inertia: true,
+            modifiers: [
+              interact.modifiers.restrictRect({
+                restriction: $('#dragContainer')[0],
+              })
+            ],
+          })
 
-      function getData_BG(){
-        let Img = $('#BG-img')[0]
-        var BG = {
-          nat_w: 0, nat_h: 0, nat_r: 0,
-          fit_w: 0, fit_h: 0, fit_s: 0, 
-          evt_s: 1,
-          x: 0, y: 0,
-        }
-
-        BG.evt_s = 1
-        BG.nat_w = Img.naturalWidth
-        BG.nat_h = Img.naturalHeight
-        BG.nat_r = BG.nat_w / BG.nat_h // 圖片長寬比
-        let wRatio = window.innerWidth / window.innerHeight // 螢幕長寬比
-        if ( BG.nat_r > wRatio ){ // 圖片寬/高比 > 螢幕 (cover)
-          BG.fit_h = window.innerHeight
-          BG.fit_w = window.innerHeight * BG.nat_r
-          BG.x = -( BG.fit_w - window.innerWidth ) / 2
-          BG.y = 0
-        } else {
-          BG.fit_w = window.innerWidth
-          BG.fit_h = window.innerWidth / BG.nat_r
-          BG.x = 0
-          BG.y = -( BG.fit_h - window.innerHeight ) / 2
-        }
-        BG.fit_s = BG.fit_w / Img.naturalWidth
-
-        $('#BG-img').attr('data-nat-w', BG.nat_w )
-        $('#BG-img').attr('data-nat-h', BG.nat_h )
-        $('#BG-img').attr('data-nat-r', BG.nat_r )
-        $('#BG-img').attr('data-fit-w', BG.fit_w )
-        $('#BG-img').attr('data-fit-h', BG.fit_h )
-        $('#BG-img').attr('data-evt-s', BG.evt_s )
-        $('#BG-img').css('width', BG.fit_w)
-        $('#BG-img').css('height', BG.fit_h)
-
-        $('#BG-drag').attr('data-x', BG.x)
-        $('#BG-drag').attr('data-y', BG.y)
-        $('#BG-drag').css('transform', `translate(${BG.x}px,${BG.y}px)`)
-
-        $('#bg-scaleRange').val( BG.evt_s )
-      }
-
-      function scale_Print(){
-
-      }
-
-      function scale_BG(){
-        let BG = {
-          fit_w: +$('#BG-img').attr('data-fit-w'), 
-          fit_h: +$('#BG-img').attr('data-fit-h'),
-          evt_s: +$('#BG-img').attr('data-evt-s'),
-          x: +$('#BG-drag').attr('data-x'),
-          y: +$('#BG-drag').attr('data-y'),
-        }
-
-        let newScale = +$('#bg-scaleRange').val()
-        let oldScale = BG.evt_s
-        let min = +$('#bg-scaleRange').attr('min')
-        let max = +$('#bg-scaleRange').attr('max')
-        newScale = newScale < min ? min : newScale
-        newScale = newScale > max ? max : newScale
-
-        BG.x += -( BG.fit_w*newScale - BG.fit_w*oldScale ) / 2
-        BG.y += -( BG.fit_h*newScale - BG.fit_h*oldScale ) / 2
-
-        $('#BG-img').attr('data-evt-s', newScale)
-        $('#BG-img').css('width', BG.fit_w*newScale)
-        $('#BG-img').css('height', BG.fit_h*newScale)
-        $('#BG-drag').css('transform', `translate(${BG.x}px,${BG.y}px)`)
-        $('#BG-drag').attr('data-x', BG.x)
-        $('#BG-drag').attr('data-y', BG.y)
-      }
-
-      function upload_BG(self) {
-        if (self.files && self.files[0]) {
-          var reader = new FileReader()
-          reader.readAsDataURL(self.files[0])
-          reader.onload = function(e) {
-            let base64 = this.result
-            // let img = new Image()
-            // img.src = base64
-            // img.onload = function(e){
-              $('#BG-img').attr('src', base64)
-              $('#BG-img').addClass('js-customBG')
-              getData_BG()
-            // }
+        },
+        data: {
+          bg: {
+            mode: 'cover',
+            scaleRange: {
+              min: 0.2,
+              max: 5,
+              val: 1,
+              oldVal: 1,
+            },
+            view: { id: 1005, cm_w: 100, cm_h: 0, nat_w: 0, nat_h: 0, ratio: 0, fit_w: 0, fit_h: 0, fit_s: 0, src: 'https://storage.googleapis.com/opinion-cms-cwg-tw/article/202103/article-6052f9b074f33.jpg', x: 0, y: 0, },
+            list: [
+              { id: 1004, nat_w: 0, nat_h: 0, ratio: 0, fit_w: 0, fit_h: 0, fit_s: 0, src: 'https://picsum.photos/1600/900', x: 0, y: 0, },
+            ],
+          },
+          paint: {
+            scaleRange: {
+              min: 0.05,
+              max: 1,
+              val: 0.10,
+              oldVal: 1,
+            },
+            add: [],
+            list: [
+              { id: 1001, cm_w: 60, cm_h: 40, src: 'https://picsum.photos/600/400', x: 0, y: 0, show: true },
+              { id: 1002, cm_w: 90, cm_h: 120, src: 'https://picsum.photos/300/400', x: 0, y: 0, show: true },
+              { id: 1003, cm_w: 100, cm_h: 100, src: 'https://picsum.photos/500/500', x: 0, y: 0, show: true },
+            ],
           }
-        }
-      }
+        },
+        computed: {
+          paintScale(){
+            let V = this
+            return V.paint.scaleRange.val * V.bg.view.fit_s * V.bg.scaleRange.val
+          },
+        },
+        methods: {
+          addItem(arr, obj) {
+            arr.push(obj)
+          },
+          delItem(arr, idx) {
+            arr.splice(idx, 1)
+          },
+          upload_BG(evt){
+            let target = evt.target
+            if (target.files && target.files[0]) {
+              var reader = new FileReader()
+              reader.readAsDataURL(target.files[0])
+              reader.onload = function() {
+                let base64 = this.result
+                $('#BG-img').attr('src', base64)
+              }
+            }
+          },
+          append_Paint(arr,idx){
+            let V = this
+            arr[idx].show = false
+            arr[idx].x = V.bg.view.fit_w/2 - arr[idx].cm_w/2
+            arr[idx].y = V.bg.view.fit_h/2 - arr[idx].cm_h/2 - $('#botMenu-content').height()/2
+            V.addItem( V.paint.add, arr[idx] )
+          },
 
-      function append_Print( src ){
-        let uuid = _uuid()
-        let img = new Image()
-        img.src = src
-        img.onload = function(e){
-          let w = 150
-          let h = 150
-          let x = window.innerWidth/2 - w/2
-          let y = window.innerHeight/2 - h/2
-          let ImgHtml = `<img id="pic-${uuid}" src="${src}" class="js-draggable" style="width: ${w}px; height: ${h}px; transform: translate(${x}px,${y}px)" data-x="${x}" data-y="${y}">`
-          $('#print-drag-container').append( ImgHtml )
+          init_BG(){
+            let V = this
+                V.bg.scaleRange.val = 1
+            
+            let Img = $('#BG-img')[0]
+            let BG = V.bg.view
+                BG.nat_w = Img.naturalWidth
+                BG.nat_h = Img.naturalHeight
+                BG.ratio = BG.nat_w / BG.nat_h // 圖片長寬比
+                BG.cm_h = 100 * BG.ratio // 寬100公分 / 高x公分
+
+            let w_ratio = window.innerWidth / window.innerHeight // 螢幕長寬比
+            let modeBool = V.bg.mode === 'cover' ? BG.ratio > w_ratio : BG.ratio < w_ratio
+
+            if ( modeBool ){ // 圖片寬/高比 > 螢幕 (cover)
+              BG.fit_h = window.innerHeight
+              BG.fit_w = window.innerHeight * BG.ratio
+              BG.x = -( BG.fit_w - window.innerWidth ) / 2
+              BG.y = 0
+            } else {
+              BG.fit_w = window.innerWidth
+              BG.fit_h = window.innerWidth / BG.ratio
+              BG.x = 0
+              BG.y = -( BG.fit_h - window.innerHeight ) / 2
+            }
+            BG.fit_s = BG.fit_w / 100 // 以100公分為基礎
+            // BG.fit_s = BG.fit_w / Img.naturalWidth
+          },
+
+          scale_after_center_BG(){
+            let V = this
+            let { view:BGv, scaleRange:BGs } = V.bg
+            let oldScale = +BGs.oldVal
+            let newScale = +BGs.val
+
+            var $target = $(event.target)
+
+            let x = ( BGv.fit_w*newScale - BGv.fit_w*oldScale ) / 2
+            let y = ( BGv.fit_h*newScale - BGv.fit_h*oldScale ) / 2
+            BGv.x -= x
+            BGv.y -= y
+            
+            let amp = newScale / oldScale
+            V.paint.add.forEach( item => {
+              item.x = item.x * amp
+              item.y = item.y * amp
+            }) 
+            
+            BGs.oldVal = newScale
+          },
+
+          scale_after_center_paint(){
+            let V = this
+            let oldScale = +V.paint.scaleRange.oldVal
+            let newScale = +V.paint.scaleRange.val
+            let paintScale = V.paint.scaleRange.val * V.bg.view.fit_s * (newScale - oldScale)
+
+            // 待調整
+            V.paint.add.forEach( item => {
+              item.x -= item.cm_w * paintScale / 2
+              item.y -= item.cm_h * paintScale / 2
+            })
+
+            V.paint.scaleRange.oldVal = newScale
+          },
         }
-      }
-      
-      $(function(){
-        ImgDraggable()
-        // ImgResizable()
-        // ImgGesturable()
       })
+
+      function getTransform( target ){
+        var style = window.getComputedStyle( target )
+        var matrix = new WebKitCSSMatrix(style.transform)
+        var {a,b,c,d,e,f,m11,m12,m13,m14,m21,m22,m23,m24,m31,m32,m33,m34,m41,m42,m43,m44} = matrix
+        return { x: m41, y: m42 }
+      }
 
       function ImgDraggable(){
-        interact('.js-draggable')
-          .draggable({
-            listeners: { move: dragMoveListener },
-            // inertia: true,
-            // modifiers: [
-            //   interact.modifiers.restrictRect({
-            //     restriction: $('#dragContent')[0],
-            //   })
-            // ],
-          })
+        
       }
       
       function ImgGesturable(){
@@ -338,21 +387,6 @@
           })
       }
 
-      function dragMoveListener(event) {
-        var $target = $(event.target)
-
-        let x = (parseFloat($target.attr('data-x')) || 0) + event.dx
-        let y = (parseFloat($target.attr('data-y')) || 0) + event.dy
-
-        $target.css('transform', 'translate('+x+'px, '+y+'px)')
-
-        // var style = window.getComputedStyle( $target[0] );
-        // var matrix = new WebKitCSSMatrix(style.transform);
-        // var { a,b,c,d,e,f,m11,m12,m13,m14,m21,m22,m23,m24,m31,m32,m33,m34,m41,m42,m43,m44 } = matrix
-        
-        $target.attr('data-x', x)
-        $target.attr('data-y', y)
-      }
     </script>
   </div>
 </body>
