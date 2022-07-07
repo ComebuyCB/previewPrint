@@ -21,9 +21,7 @@
   <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script> -->
 
   <!-- main -->
-  <link href="/static/common/css/emmet.css" rel="stylesheet">
   <link href="/static/common/css/main.css" rel="stylesheet">
-  <script src="/static/common/js/main.js"></script>
 </head>
 <body>
   <div id="wrap">
@@ -32,79 +30,103 @@
     </header>
 
     <main id="main">
-      <div id="dragContainer" class="pos-f loc-full">
-        <div id="BG-drag" class="js-draggable-bg" :data-id="bg['view'].id"
-          :data-x="bg['view'].x" :data-y="bg['view'].y"
-          :style="`transform: translate(${bg['view'].x}px,${bg['view'].y}px);`">
-          <img id="BG-img" :src="bg['view'].src" @load="init_BG()"
-            :style="`
-              width: ${ bg['view'].cm_w * bgScale }px; 
-              height: ${ bg['view'].cm_h * bgScale }px;
-          `">
+      <div class="container py-5" style="max-width: 800px">
+        <div style="border: 5px solid gray">
+          <div class="ratio ratio-16x9">
+            <div id="dragContainer">
+              <div id="BG-drag" class="js-draggable-bg" :data-id="bg['view'].id"
+                :data-x="bg['view'].x" :data-y="bg['view'].y"
+                :style="`transform: translate(${bg['view'].x}px,${bg['view'].y}px);`">
+                <img id="BG-img" :src="bg['view'].src" @load="init_BG()"
+                  :style="`
+                    width: ${ bg['view'].px_w * bgScale }px; 
+                    height: ${ bg['view'].px_h * bgScale }px;
+                  `
+                ">
 
-          <div id="paint-ruler" class="bg-grid-line pos-a loc-full" :style="`background-size: ${100 * paintScale}px ${100 * paintScale}px;`"></div>
+                <div id="paint-dragBox" class="pos-a loc-full">
+                  <img v-for="(item, idx) in paint.add" class="draggable-paint js-draggable-paint" :data-id="item.id" style="box-shadow: 0 0 4px rgba(0,0,0,0.2);"
+                    :data-x="item.x" :data-y="item.y" :src="item.src"
+                    :style="`transform: translate(${item.x}px, ${item.y}px);
+                      width: ${ item.cm_w * paintScale }px;
+                      height: ${ item.cm_h * paintScale }px;
+                    `
+                  ">
+                </div>
+              </div>
 
-          <div id="paint-dragBox" class="pos-a loc-full">
-            <img v-for="(item, idx) in paint.add" class="js-draggable-paint" :data-id="item.id"
-              :data-x="item.x" :data-y="item.y" :src="item.src"
-              :style="`
-                width: ${ item.cm_w * paintScale }px; 
-                height: ${ item.cm_h * paintScale }px; 
-                transform: translate(${item.x}px, ${item.y}px); 
-            `">
+              <div id="paint-ruler" class="bg-grid-line pos-a js-draggable-bg"
+                  :data-x="-container.w * 0.5" :data-y="-container.h * 0.5"
+                  style="display: none"
+                  :style="`transform: translate( ${-container.w * 0.5}px, ${-container.h * 0.5}px); 
+                    background-size: ${100 * paintScale}px ${100 * paintScale}px; 
+                    width: ${container.w * 2}px; height: ${container.h * 2}px;`
+                  "></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="botMenu">
+          <div id="rangeCont-paint">
+            <div class="d-flex flex-column container-xl py-2" style="background-color: rgba(255,255,255,0.5)">
+              <div class="text-center fw-bold">比例尺 (一格=1公尺) {{ paint.scaleRange.val }}</div>
+              <div class="d-flex">
+                <i id="ruler-scaleDown" class="fa fa-minus px-1"></i>
+                <input id="ruler-scaleRange" type="range" :min="paint.scaleRange.min" :max="paint.scaleRange.max" step="0.001" class="w-100" v-model.number="paint.scaleRange.val" @input="scale_after_center_paint()">
+                <i id="ruler-scaleUp" class="fa fa-plus px-1"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- <div id="rangeCont-bg">
+            <div class="d-flex flex-column container-xl py-2" style="background-color: rgba(255,255,255,0.5)">
+              <div class="text-center fw-bold">縮放 {{ bg.scaleRange.val }}</div>
+              <div class="d-flex">
+                <i id="bg-scaleDown" class="fa fa-minus px-1"></i>
+                <input id="bg-scaleRange" type="range" :min="bg.scaleRange.min" :max="bg.scaleRange.max" step="0.01" class="w-100" v-model.number="bg.scaleRange.val" @input="scale_after_center_BG()">
+                <i id="bg-scaleUp" class="fa fa-plus px-1"></i>
+              </div>
+            </div>
+          </div> -->
+          
+          
+          <div id="botMenu-content" class="bg-white">
+            <nav id="botMenu-header">
+              <div class="nav nav-tabs" role="tablist">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#menu-paint" type="button" role="tab">畫作</button>
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#menu-bg" type="button" role="tab">背景</button>
+                <button class="btn btn-secondary" onclick="$('#paint-ruler').toggle(); $(this).toggleClass('btn-success')"><i class="fa fa-ruler"></i></button>
+              </div>
+            </nav>
+
+            <div id="botMenu-body" class="tab-content">
+              <div id="menu-paint" class="tab-pane fade show active" role="tabpanel">
+                <div class="row">
+                  <div class="col-3" v-for="(item,idx) of paint.list">
+                    <div class="imgBox img-full img-cover" :class="{ active: item.show }"
+                      :style="`background-image: url(${item.src})`" @click="list_toggle_Paint( idx )">
+                    </div>
+                  </div>
+                </div>
+              </div>
+  
+              <div id="menu-bg" class="tab-pane fade" role="tabpanel">
+                <div class="mb-2">選擇背景: <input id="file" type="file" accept="image/*" @change="upload_BG"></div>
+                <label> <input type="radio" v-model="bg.mode" value="contain" @change="clear_paint() "> 全螢幕 contain </label>
+                <label> <input type="radio" v-model="bg.mode" value="cover" @change="clear_paint() "> 填滿 cover </label>
+
+                <div class="row">
+                  <div class="col-3" v-for="(item,idx) of bg.list">
+                    <div class="imgBox img-full img-cover" :style="`background-image: url(${item.src})`" @click="list_change_Bg( idx )">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
   
-      <div id="botMenu" class="pos-f loc-2 w-100">
-        <div id="pRuler-cont" class="pos-a loc-t" style="top: -120px;">
-          <div class="d-flex flex-column container-xl py-2" style="background-color: rgba(255,255,255,0.5)">
-            <div class="text-center fw-bold">比例尺 (一格為1公尺) {{ paint.scaleRange.val }}</div>
-            <div class="d-flex">
-              <i id="ruler-scaleDown" class="fa fa-minus px-1"></i>
-              <input id="ruler-scaleRange" type="range" :min="paint.scaleRange.min" :max="paint.scaleRange.max" step="0.001" class="w-100" v-model.number="paint.scaleRange.val" @input="scale_after_center_paint()">
-              <i id="ruler-scaleUp" class="fa fa-plus px-1"></i>
-            </div>
-          </div>
-        </div>
-        <div id="bPuler-cont" class="pos-a loc-t" style="top: -60px;">
-          <div class="d-flex flex-column container-xl py-2" style="background-color: rgba(255,255,255,0.5)">
-            <div class="text-center fw-bold">縮放 {{ bg.scaleRange.val }}</div>
-            <div class="d-flex">
-              <i id="bg-scaleDown" class="fa fa-minus px-1"></i>
-              <input id="bg-scaleRange" type="range" :min="bg.scaleRange.min" :max="bg.scaleRange.max" step="0.01" class="w-100" v-model.number="bg.scaleRange.val" @input="scale_after_center_BG()">
-              <i id="bg-scaleUp" class="fa fa-plus px-1"></i>
-            </div>
-          </div>
-        </div>
-        
-        <button class="btn btn-primary" onclick="$('#botMenu-content, #bPuler-cont').toggle()"><i class="fa fa-bars"></i></button>
-        <button class="btn btn-success" onclick="$('#paint-ruler, #pRuler-cont').toggle();"><i class="fa fa-ruler"></i></button>
-
-        <div id="botMenu-content" class="bg-white" style="min-height: 230px;">
-          <nav id="botMenu-header">
-            <div class="nav nav-tabs" role="tablist">
-              <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#menu-paint" type="button" role="tab">畫作</button>
-              <button class="nav-link" data-bs-toggle="tab" data-bs-target="#menu-bg" type="button" role="tab">背景</button>
-            </div>
-          </nav>
-          <div id="botMenu-body" class="tab-content">
-            <div id="menu-paint" class="tab-pane fade show active" role="tabpanel">
-              <div class="d-flex">
-                <div v-for="(item,idx) of paint.list" v-show="item.show" class="imgBox img-full img-contain" :style="`background-image: url(${item.src})`">
-                  <button class="btn btn-primary fas fa-plus pos-a loc-9 js-addBtn" @click="append_Paint( paint.list, idx )"></button>
-                </div>
-              </div>
-            </div>
-
-            <div id="menu-bg" class="tab-pane fade" role="tabpanel">
-              <div class="mb-2">選擇背景: <input id="file" type="file" accept="image/*" @change="upload_BG"></div>
-              <label> <input type="radio" v-model="bg.mode" value="contain" @change="init_BG()"> 全螢幕 contain </label>
-              <label> <input type="radio" v-model="bg.mode" value="cover" @change="init_BG()"> 填滿 cover </label>
-            </div>
-          </div>
-        </div>
-      </div>
     </main>
 
     <script>
@@ -145,7 +167,7 @@
                 }
               }
             },
-            // inertia: true,
+            inertia: true,
             modifiers: [
               interact.modifiers.restrictRect({
                 restriction: $('#dragContainer')[0],
@@ -165,7 +187,6 @@
               end(event) {
                 var $target = $(event.target)
                 var id = $target.attr('data-id')
-
                 V.paint.add.forEach( (ele, idx, arr)=>{
                   if ( ele.id == id ){
                     arr[idx].x = +$target.attr('data-x')
@@ -174,7 +195,7 @@
                 })
               }
             },
-            // inertia: true,
+            inertia: true,
             modifiers: [
               interact.modifiers.restrictRect({
                 restriction: $('#BG-drag')[0],
@@ -184,31 +205,47 @@
           })
         },
         data: {
+          container: {
+            w: window.innerWidth,
+            h: window.innerHeight,
+            ratio: window.innerWidth / window.innerHeight
+          },
           bg: {
             mode: 'cover',
             scaleRange: {
-              min: 0.5,
-              max: 5,
+              min: 0,
+              max: 10,
               val: 1,
               oldVal: null,
             },
-            view: { id: 1005, cm_w: 100, cm_h: 0, nat_w: 0, nat_h: 0, ratio: 0, fit_w: 0, fit_h: 0, fit_s: 0, src: 'https://storage.googleapis.com/opinion-cms-cwg-tw/article/202103/article-6052f9b074f33.jpg', x: 0, y: 0, },
+            view: { 
+              id: 1005,
+              px_w: 100, px_h: null,
+              nat_w: null, nat_h: null, ratio: null,
+              fit_w: null, fit_h: null, fit_s: null, // fit: 圖片到該容器時的寬高，cover、contain會有所變化。
+              // src: 'http://www.asiaartcenter.org/asia/wp-content/uploads/2022/05/about_slide_225.jpg', // suit
+              // src: 'https://img95.699pic.com/photo/40007/7298.jpg_wh300.jpg', // long width
+              // src: 'https://1.bp.blogspot.com/-fPN9eStiEvg/V5cEU-srlxI/AAAAAAAASao/_PZuow9oIzUEXHdYPPlmjyE_WHdHEYO1gCEw/s1600/PICT_20150402_003554.JPG', // long height
+              src: 'https://www.bridgemi.com/sites/default/files/styles/full_width_image/public/2022-02/school%20shutterstock.jpg?itok=TX4abe5q',
+              x: 0, y: 0,
+            },
             list: [
-              { id: 1004, nat_w: 0, nat_h: 0, ratio: 0, fit_w: 0, fit_h: 0, fit_s: 0, src: 'https://picsum.photos/1600/900', x: 0, y: 0, },
+              { id: 4004, src: 'https://picsum.photos/1600/1200', },
+              { id: 4005, src: 'https://picsum.photos/1200/1600', },
             ],
           },
           paint: {
             scaleRange: {
               min: 0.05,
-              max: 1,
-              val: 0.10,
+              max: 0.4,
+              val: 0.25,
               oldVal: null,
             },
             add: [],
             list: [
-              { id: 1001, cm_w: 60, cm_h: 40, src: 'https://picsum.photos/600/400', x: 0, y: 0, show: true },
-              { id: 1002, cm_w: 60, cm_h: 80, src: 'https://picsum.photos/300/400', x: 0, y: 0, show: true },
-              { id: 1003, cm_w: 100, cm_h: 100, src: 'https://picsum.photos/500/500', x: 0, y: 0, show: true },
+              { id: 1001, cm_w: 60, cm_h: 40, src: 'https://picsum.photos/600/400', show: false },
+              { id: 1002, cm_w: 60, cm_h: 80, src: 'https://picsum.photos/300/400', show: false },
+              { id: 1003, cm_w: 100, cm_h: 100, src: 'https://picsum.photos/500/500', show: false },
             ],
           }
         },
@@ -229,23 +266,39 @@
           delItem(arr, idx) {
             arr.splice(idx, 1)
           },
+
           upload_BG(evt){
+            let V = this
             let target = evt.target
             if (target.files && target.files[0]) {
               var reader = new FileReader()
               reader.readAsDataURL(target.files[0])
               reader.onload = function() {
                 let base64 = this.result
-                $('#BG-img').attr('src', base64)
+                V.bg.view.src = base64
               }
             }
           },
-          append_Paint(arr,idx){
+
+          list_change_Bg( idx ){
+            this.bg.view.src = this.bg.list[idx].src
+          },
+
+          list_toggle_Paint( idx ){
             let V = this
-            arr[idx].show = false
-            arr[idx].x = V.bg.view.fit_w/2 - arr[idx].cm_w/2
-            arr[idx].y = V.bg.view.fit_h/2 - arr[idx].cm_h/2 - $('#botMenu-content').height()/2
-            V.addItem( V.paint.add, arr[idx] )
+            let List = V.paint.list
+            let Add = V.paint.add
+
+            if ( List[idx].show === false ){ // paint => will add to container
+              List[idx].show = true
+              Add.push( List[idx] )
+              Add[Add.length-1].x = V.bg.view.fit_w / 2 - List[idx].cm_w * V.paintScale / 2
+              Add[Add.length-1].y = V.bg.view.fit_h / 2 - List[idx].cm_h * V.paintScale / 2
+            } else { // paint in container => will delete
+              List[idx].show = false
+              let delIdx = Add.findIndex( item => item.id == List[idx].id )
+              Add.splice(delIdx,1)
+            }
           },
 
           init_BG(){
@@ -257,25 +310,38 @@
                 BG.nat_w = Img.naturalWidth
                 BG.nat_h = Img.naturalHeight
                 BG.ratio = BG.nat_w / BG.nat_h // 圖片長寬比
-                BG.cm_w = 100 // 寬固定100公分為基礎
-                BG.cm_h = BG.cm_w / BG.ratio // 寬100公分 / 高x公分
+                BG.px_w = 100 // 寬100px為固定100公分。 定義100px = 100公分
+                BG.px_h = BG.px_w / BG.ratio // 寬100公分(px) / 高x公分(px)
 
-            let w_ratio = window.innerWidth / window.innerHeight // 螢幕長寬比
-            let modeBool = V.bg.mode === 'cover' ? BG.ratio > w_ratio : BG.ratio < w_ratio
+            let CONT = V.container
+                CONT.w = $('#dragContainer').width() || window.innerWidth
+                CONT.h = $('#dragContainer').height() || window.innerHeight
+                CONT.ratio = CONT.w / CONT.h // 寬/高比
 
-            if ( modeBool ){ // 圖片寬/高比 > 螢幕 (cover)
-              BG.fit_h = window.innerHeight
-              BG.fit_w = window.innerHeight * BG.ratio
-              BG.x = -( BG.fit_w - window.innerWidth ) / 2
+            let modeBool = V.bg.mode === 'cover' ? BG.ratio > CONT.ratio : BG.ratio < CONT.ratio
+
+            if ( modeBool ){ // 寬/高比: 圖片 > 容器 (cover)
+              BG.fit_h = CONT.h
+              BG.fit_w = CONT.h * BG.ratio
+              BG.x = -( BG.fit_w - CONT.w ) / 2
               BG.y = 0
             } else {
-              BG.fit_w = window.innerWidth
-              BG.fit_h = window.innerWidth / BG.ratio
+              BG.fit_w = CONT.w
+              BG.fit_h = CONT.w / BG.ratio
               BG.x = 0
-              BG.y = -( BG.fit_h - window.innerHeight ) / 2
+              BG.y = -( BG.fit_h - CONT.h ) / 2
             }
-            BG.fit_s = BG.fit_w / BG.cm_w
-            // BG.fit_s = BG.fit_w / Img.naturalWidth
+
+            BG.fit_s = BG.fit_w / BG.px_w
+
+            this.paint.add.forEach((e)=>{
+              e.x = V.bg.view.fit_w / 2 - e.cm_w * V.paintScale / 2
+              e.y = V.bg.view.fit_h / 2 - e.cm_h * V.paintScale / 2
+            })
+          },
+
+          clear_paint(){
+            this.init_BG()
           },
 
           scale_after_center_BG(){
@@ -288,9 +354,9 @@
             BG_V.y -= BG_V.fit_h * ( newValue - oldValue ) / 2
             
             let amp = newValue / oldValue
-            V.paint.add.forEach( item => {
-              item.x = item.x * amp
-              item.y = item.y * amp
+            V.paint.add.forEach( p => {
+              p.x = p.x * amp
+              p.y = p.y * amp
             }) 
             
             BG_S.oldVal = newValue
@@ -304,9 +370,9 @@
 
             let oS = V.bgScale * oldValue
             let nS = V.bgScale * newValue
-            V.paint.add.forEach( item => {
-              item.x -= item.cm_w * (nS - oS) / 2
-              item.y -= item.cm_h * (nS - oS) / 2
+            V.paint.add.forEach( p => {
+              p.x -= p.cm_w * (nS - oS) / 2
+              p.y -= p.cm_h * (nS - oS) / 2
             })
 
             PTScale.oldVal = newValue

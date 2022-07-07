@@ -21,6 +21,11 @@
 /*** ###### Public Css ###### ***/
   /*** === Simple Css 單一樣式，通常套用一行結束 === ***/
     /*=== 例如: box model、color、font... ===*/
+      .pos-s {position:static;}
+      .pos-a {position:absolute;}
+      .pos-r {position:relative;}
+      .pos-f {position:fixed;}
+
       .loc-1 { left:0; bottom:0; }
       .loc-2 { left:50%; bottom:0; transform:translate(-50%,0%); }
       .loc-3 { right:0; bottom:0; }
@@ -55,14 +60,19 @@
   /*** === Current Page === ***/
     /*=== 例如: #index、#login、#about... ===*/
       #dragContainer { border: 1px solid #999; overflow: hidden; user-select: none; }
-      .imgBox { position: relative; display: inline-block; width: 150px; height: 150px; z-index: 2; border: solid 2px #eee; }
-
-      .bg-grid-line { 
+      .imgBox { position: relative; display: inline-block; width: 150px; height: 150px; }
+      .imgBox.active { outline: 4px solid rgb(99,99,240) }
+      .bg-grid-line {
+        background: center center;
         background-size: 100px 100px;
         background-image:
-        linear-gradient(to right, white 1px, black 1px, transparent 1px),
-        linear-gradient(to bottom, white 1px, black 1px, transparent 1px);
-        pointer-events: none;
+        linear-gradient(to right, rgba(255,255,255,1) 1px, rgba(0,0,0,1) 2px, transparent 1px, transparent 49%, rgba(240,240,240,0.25) 1px, rgba(199,199,199,0.25) 2px, transparent 50%),
+        linear-gradient(to bottom, rgba(255,255,255,1) 1px, rgba(0,0,0,1) 2px, transparent 1px, transparent 49%, rgba(240,240,240,0.25) 1px, rgba(199,199,199,0.25) 2px, transparent 50%);
+        /* pointer-events: none; */
       }
       #botMenu-body .tab-pane { padding: 1rem; }
       .js-draggable-bg, .js-draggable-paint { touch-action: none; position: absolute; }
+      .draggable-paint { animation: 0.25s showP forwards; }
+      @keyframes showP{
+        0% { transform: translate( -50%, 1000px ); }
+      }
